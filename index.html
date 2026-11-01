@@ -289,13 +289,19 @@
   .ghost i { position: absolute; background: #FFF center/cover no-repeat; }
   /* ---- zoomed add-to-cart: Figma cart icon (415:5816) → CartFab, all in camera-local pt ---- */
   .zsvg { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; z-index: 82; pointer-events: none; visibility: hidden; }
-  .zghost { z-index: 81; }
+  .zghost { z-index: 79; }
+  .zstreak { position: absolute; left: 0; top: 0; width: 128px; height: 0; visibility: hidden; pointer-events: none; }
+  .zstreak i { position: absolute; width: 3.4px; border-radius: 2px; transform-origin: 50% 100%;
+    background: linear-gradient(to top, rgb(0 0 0 / .17), rgb(0 0 0 / 0)); }                                      /* (goes in behind the frosted glass) */
+  .zbtn { position: absolute; left: 8px; top: 8px; height: 52px; width: 52px; border-radius: 999px; background: #ED1944; overflow: hidden; }
+  .zbtn svg { position: absolute; left: 50%; top: 50%; width: 24px; height: 23.63px; margin: -11.815px 0 0 -12px; display: block; }
+  .zbtn span { position: absolute; left: 50%; top: 50%; font: 500 15px/28px "Digikala"; color: #FFFFFF; white-space: nowrap; transform: translate(-50%, -50%); }
   .zghost2 { z-index: 83; }
   /* the 1-pt edge is drawn as an inset ring on the glass, UNDER the inner white highlight (Figma 409:2352: the
      inner shadow covers the border), with the content above both */
   .zf { position: absolute; left: 0; top: 0; height: 68px; border-radius: 999px; box-sizing: border-box;
     box-shadow: 0 4px 16px rgb(0 0 0 / .10); overflow: hidden; direction: ltr; z-index: 80; visibility: hidden; transform-origin: 50% 50%; }
-  .zf .cf-glass { box-shadow: inset 0 0 0 1px #D6D6D6; }       /* Figma values (glass #F5F5F5 80 %, highlight 0 4 8 white 70 %) */
+  .zf .cf-glass { box-shadow: inset 0 0 0 1px #D6D6D6; border-radius: inherit; background: rgb(245 245 245 / var(--ga, .8)); }       /* Figma values (glass #F5F5F5 80 %, highlight 0 4 8 white 70 %) */
   .zf-in { position: absolute; right: 1px; top: 1px; width: 356px; height: 66px; box-sizing: border-box; padding: 0 16px 0 8px;
     display: flex; align-items: center; gap: 12px; }
   .zf .zbtn-sp { visibility: hidden; }
@@ -360,7 +366,6 @@
   }
   .sb-tip span { color: #888; margin-left: 6px; }
   .sb-track:hover .sb-tip, .sb-track.drag .sb-tip { opacity: 1; }
-  .sb-chap { flex: none; min-width: 120px; color: rgb(255 255 255 / .6); text-align: right; }
 </style>
 </head>
 <body>
@@ -462,10 +467,6 @@
     <div class="sb-marks" id="sbMarks"></div>
     <div class="sb-head" id="sbHead"></div>
     <div class="sb-tip" id="sbTip"></div>
-  </div>
-  <div class="sb-chap" id="sbChap"></div>
-  <div class="sb-seg" id="sbIcon" role="radiogroup" aria-label="Cart icon" title="Cart icon">
-    <button type="button" role="radio" data-icon="trolley">Trolley</button><button type="button" role="radio" data-icon="basket">Basket</button>
   </div>
 </div>
 
@@ -719,7 +720,7 @@ const kick = (t, w, z, v0) => {                          // impulse response: st
 const T_REV = T_SW + 0.05, D_REV = D_PHONE;
 const REV_CARD_Y = ROW4_Y + 6.4 + NV_GROW;                      // carousel 4's card top (local) after the page settled
 /* In the zoomed framing: a short swipe one more card along (the row moves right, a new card enters on the
-   left), then the Laimon soda's plus is tapped. As the camera eases out a little, the Figma cart icon (415:5816)
+   left), then the Zar spaghetti's plus is tapped. As the camera eases out a little, the Figma cart icon (415:5816)
    pops up below the row and RECEIVES the item: it swells a little as the thumbnail comes in and gets fat for a
    moment as it swallows it, then eases back.
    Then the icon BECOMES the CartFab: its wheels retract like landing gear, the slots close, the handle folds into
@@ -729,7 +730,7 @@ const REV_CARD_Y = ROW4_Y + 6.4 + NV_GROW;                      // carousel 4's 
 const T_Z0 = T_REV + D_REV;                                      // zoomed framing settled
 const SW3_T = T_Z0 + 0.35, SW3_DRAG0 = SW3_T + 0.08, SW3_TD = 0.2, SW3_LD = 56, SW3_DIST = CAR_PITCH;
 const SW3_V = 2 * SW3_LD / SW3_TD, SW3_REL = SW3_DRAG0 + SW3_TD, SW3_END = SW3_REL + 4 * (SW3_DIST - SW3_LD) / SW3_V;
-const T_ZT = SW3_END + 0.06, P_Z = T_ZT + 0.16, R_Z = P_Z + 0.09; // tap the soda's plus
+const T_ZT = SW3_END + 0.06, P_Z = T_ZT + 0.16, R_Z = P_Z + 0.09; // tap the spaghetti's plus
 const T_ZO = T_ZT - 0.05, D_ZO = 1.6, S_ZO = 2.2;                // zoom out a little, from the moment the finger lands
 const ZO_EASE = cubicBezier(0.45, 0, 0.2, 1);
 const F_ZO = [64, 1392];                                         // …centred on the card column and the FAB below it
@@ -738,16 +739,107 @@ const CART_W = 104;                                              // cart glyph w
 const FAB_W = 358, FAB_S = 1.2;                                  // CartFab (Figma 390-pt layout), shown 20 % up
 const T_CP = R_Z + 0.16, CART_POP = { freq: 2.2, zeta: 0.5 };    // cart pops up
 const T_GL = R_Z + 0.08, GFLY = 0.7, T_IN = T_GL + GFLY;         // ghost: launch, flight, into the basket
-const T_MO = T_IN + 0.46;                                        // cart → button morph
-const T_GS = T_MO + 0.3;                                         // glass bar inflates out of the button
-const T_WD = T_GS + 0.12;                                        // …and stretches into the CartFab
+/* The cart icon is the COLLAPSED CartFab (Figma 460:4533 "before"): the 68-pt glass circle with the red 52-pt
+   button and a white cart in it — shown bigger while it receives. The expansion is the Figma "after": the circle
+   stretches into the 358-pt bar, the red circle into the «تکمیل خرید» pill (the cart glyph gives way to the label),
+   the content and the item discs come in on the right. */
+const ICON_S = 1.6;                                              // collapsed-FAB scale while receiving (cumulated)
+const T_WD = T_IN + 0.5;                                         // circle → CartFab
+const T_MO = T_WD, T_GS = T_WD;                                  // (chapter mark)
 /* two more adds once the FAB has settled: each thumbnail flies straight into the FAB's strip (newest on the right,
    the older ones slide left by 16), its disc pops, the bar dips under it and the total rolls */
 const ZFLY = 0.64;                                               // (with Z_G: tossed ≈ 38 pt up, then falls)
 const T_ZT2 = T_WD + 1.05, P_Z2 = T_ZT2 + 0.16, R_Z2 = P_Z2 + 0.09, L_Z2 = R_Z2 + ZFLY;   // quinoa puff
 const T_ZT3 = R_Z2 + 0.62, P_Z3 = T_ZT3 + 0.16, R_Z3 = P_Z3 + 0.09, L_Z3 = R_Z3 + ZFLY;   // Khoshbakht tuna
 const T_ZT4 = L_Z3 + 0.25, P_Z4 = T_ZT4 + 0.16, R_Z4 = P_Z4 + 0.09, L_Z4 = R_Z4 + ZFLY;   // tuna again → ۲
-const D_END = L_Z4 + 1.8;
+const D_END_CUM = L_Z4 + 1.8;
+/* ISOLATED variant (toggle): after the spaghetti's plus is tapped, the camera "falls" with the item — every other card
+   and the heading rush up and out of frame (accelerating, staggered outward from the item, motion-blurred). The
+   spaghetti's WHOLE card stays, freed, and the collapsed CartFab (big glass circle, red cart button) rises from below.
+   The two fall toward each other like two masses released from rest — the gap closes on a true free-fall curve
+   (slow, then ever faster, snapping shut at contact), each stretching toward the other (tidal pull) — and touch at
+   the centre of the frame. There the card ADHERES and is ABSORBED: the circle keeps reaching for it while it is
+   drawn in to the circle's centre (behind the frosted glass and the red button), shrinking as it goes; the impact
+   squashes the circle and pushes it down, then it swells with what it took in and wobbles back. Then the circle
+   stretches into the CartFab (rising to the centre, slightly bigger); the other items pop into the strip in turn. */
+const I0 = R_Z + 0.1;                                            // world takes off, the card is freed
+const I_CP = R_Z + 0.24;                                         // collapsed FAB pops up (below)
+const I_A0 = R_Z + 0.3, I_IN = R_Z + 1.68, I_EAT = 0.42;        // free fall starts · contact · absorption time (a longer fall)
+const I_WD = I_IN + 0.66, I_MO = I_WD, I_GS = I_WD;              // circle → CartFab
+/* after the FAB has formed, more items come down from above the frame (where the world went) and fall into the
+   FAB's newest slot under the same gravity as every other flight; each lands with a disc pop, a dip, a total roll */
+const I_FLY = 0.72;
+const I_SEQ = [                                                   // item index into ZITEMS · landing time · start (from the FAB centre)
+  { item: 0, qty: 1, L: 0 },
+  { item: 1, qty: 1, L: I_WD + 1.15, from: [-250, -330] },        // quinoa
+  { item: 2, qty: 1, L: I_WD + 1.65, from: [290, -345] },         // tuna
+  { item: 3, qty: 1, L: I_WD + 2.15, from: [-110, -360] },        // milk
+  { item: 2, qty: 2, L: I_WD + 2.65, from: [200, -335] },         // tuna again (→ ۲)
+];
+const D_END_ISO = I_SEQ[I_SEQ.length - 1].L + 1.8;
+const I_ICON_S = 2.1, I_FAB_S = 1.32;                            // collapsed-FAB scale while absorbing · FAB scale
+const I_R = 34 * I_ICON_S;                                       // circle radius (≈ 71 pt)
+const I_ICX = 64, I_CY0 = 1860, I_YC = 1566;                    // icon x · centre after the pop (below the frame) · contact = frame centre
+const I_FAB_Y = I_YC + 34 * 2.1;   // (the circle's centre at contact)                                            // FAB centre (= frame centre)
+const I_FOCUS = [64, I_YC - 62];                                // camera focus as they meet: the pair centred in the frame
+const I_S_FALL = 2.35, I_S_END = 2.5;                             // camera scale as they meet · pushed in as it eats
+const I_B0 = [64, 1477.2];                                       // the card's bottom-centre (col' 0)
+/* radial free fall from rest (two bodies under mutual gravity): r = r0·cos²η, t ∝ η + sinη·cosη (a cycloid) —
+   returns the fraction of the gap closed at u = t / T (0 → 1, accelerating, infinitely steep at contact) */
+function infall(u) {
+  if (u <= 0) return 0; if (u >= 1) return 1;
+  let lo = 0, hi = Math.PI / 2;
+  for (let k = 0; k < 28; k++) { const e = (lo + hi) / 2; ((e + Math.sin(e) * Math.cos(e)) / (Math.PI / 2) < u) ? lo = e : hi = e; }
+  return Math.sin((lo + hi) / 2) ** 2;
+}
+/* the pair at time t: icon centre + deformation (ex, ey = extra x / y scale) · card bottom-centre transform */
+function isoAbsorb(t) {
+  const kc = Math.max(0, spring(t - I_CP, CART_POP));
+  const u = seg(t, I_A0, I_IN), f = infall(u);
+  const df = Math.min(6, (infall(Math.min(1, u + 0.01)) - f) / 0.01);   // closing speed (capped near contact)
+  const TIDE = 0.022, tideC = TIDE * 6;                          // stretch per unit closing speed · at contact
+  const v = seg(t, I_IN, I_IN + I_EAT);
+  // icon: rises from below, reaching up for the card; impact squash; swells with what it took in; wobbles back
+  const tideI = v > 0 ? tideC * (1 - smooth01(v / 0.55)) : TIDE * df;   // adhesion: keeps reaching while it draws the card in
+  const sq = kick(t - I_IN, 17, 0.42, 2.4);
+  const grow = t < I_IN + I_EAT ? 0.15 * v ** 1.2 : 0.15 * (1 - spring(t - (I_IN + I_EAT), { freq: 1.9, zeta: 0.55 }));
+  const dip = kick(t - I_IN, 14, 0.55, 110);                     // the card's momentum pushes it down, then back
+  let iy = lerp(I_CY0 + 60 * (1 - kc), I_YC + I_R, f) + dip;
+  iy = lerp(iy, I_FAB_Y, t > I_WD - 0.1 ? spring(t - (I_WD - 0.1), { freq: 1.2, zeta: 0.85 }) : 0);   // the FAB centres
+  /* it BULGES as it eats: the circle swells into a bulb toward the card while the card goes in, then the bulb
+     jiggles back (overshooting into a slight bottom-heavy egg once) to a circle */
+  const BUL = 0.2;
+  const bulb = (v <= 0 ? 0 : t < I_IN + I_EAT ? BUL * smooth01(v / 0.7) : BUL * (1 - spring(t - (I_IN + I_EAT), { freq: 2.4, zeta: 0.5 })))
+             * (1 - smooth01(seg(t, I_WD - 0.2, I_WD)));     // fully settled before the circle opens into the bar
+  const icon = { x: I_ICX, y: iy - 18 * bulb, ex: -0.45 * tideI + 0.6 * sq + grow + 0.25 * bulb, ey: tideI - sq + grow + 0.5 * bulb, bulb };
+  // card: falls toward the icon, stretching toward it, barely shrinking …
+  const lift = -10 * smooth01(seg(t, I0, I0 + 0.35));            // freed: floats up a hair first
+  const sc = lerp(1, 0.95, smooth01(u)), tideK = TIDE * df;   // hardly shrinks on the way
+  const FOOT = I_YC - I_R * tideC + 30;                          // card bottom at contact: its last line of text just into the glass ring
+  let x = I_B0[0], y = lerp(I_B0[1] + lift, FOOT, f);
+  let sx = sc * (1 - 0.45 * tideK), sy = sc * (1 + tideK), op = 1;
+  if (v > 0) {                                                   // … then sticks and is drawn into the circle's centre
+    // pulled in briskly at first (adhesion snaps it in), settling into the centre; it shrinks late, mostly once it
+    // is already behind the frosted glass and the red button
+    const sx0 = 0.95 * (1 - 0.45 * tideC), sy0 = 0.95 * (1 + tideC), e = 1 - (1 - v) ** 2.2;
+    sy = lerp(sy0, 0.08, v ** 1.6); sx = lerp(sx0, 0.08, v ** 1.4) * (1 + 0.08 * Math.sin(Math.PI * Math.min(1, v * 2.5)));   // its foot spreads as it sticks
+    const c0 = FOOT - 125 * sy0;                                 // its centre at contact
+    y = lerp(c0, iy, e) + 125 * sy;                              // (back to bottom-centre)
+    op = 1 - smooth01((v - 0.72) / 0.28);
+  }
+  // speed lines (Figma 460:4536): come in with the fall, grow with its speed, gone at contact
+  const streak = v > 0 ? 0 : smooth01(seg(t, I_A0, I_A0 + 0.25)) * Math.min(1, 0.35 + df / 3) * (1 - smooth01(seg(u, 0.93, 1)));
+  return { icon, card: { x, y, sx, sy, op, r: 2.5 * Math.sin(Math.PI * u) * (1 - u), streak, fall: f, speed: df } };
+}
+const D_END = Math.max(D_END_CUM, D_END_ISO);
+const ZMODE = 'isolated';                                        // the final ending (the cumulated variant was dropped; its code is dormant)
+const ISO = () => ZMODE === 'isolated';
+/* everything but the falling item rushes up (ease-in cubic: it leaves fast), rippling outward from the item */
+function worldUp(t, col) {
+  if (!ISO()) return 0;
+  const st = 0.04 * Math.abs(col);                               // (the spaghetti sits at col' 0 after the swipes)
+  return -780 * seg(t, I0 + st, I0 + st + 0.62) ** 3;
+}
 const D_REVEAL = 2.0;             // card comes into focus over the first 2 s of the pull-back
 const BLUR_CARD = 240;            // starting blur in screen px — effectively formless (opacity stays 100 %)
 
@@ -1164,15 +1256,25 @@ const ADDS = [
   { pill: pillMilk,   T: T_TAP3, P: P3, R: R3, L: L3, item: 1, qty: 1 },
   { pill: pillSoda,   T: T_TAP4, P: P4, R: R4, L: L4, item: 2, qty: 1 },
 ];
-const pillTuna = makePill(row4[7]);
-const PILLS = [pillQuinoa, pillMilk, pillSoda, pillTuna];
+const pillTuna = makePill(row4[7]), pillSpag = makePill(row4[6]);
+/* fall trail above the spaghetti card (Figma 460:4536 Group 1): five 3.4-pt lines, light grey fading upward, offset
+   x −38.7 / −19.8 / 0 / 18.9 / 38.7 from the card centre, bottoms 19 / 28 / 16 / 39 / 19 pt above the card */
+const STREAKS = [[-38.7, 19, 41], [-19.8, 28, 37], [0, 16, 36], [18.9, 39, 39], [38.7, 19, 40]];
+const zStreak = document.createElement('div'); zStreak.className = 'zstreak';
+zStreak.innerHTML = STREAKS.map(([dx, b, h]) => `<i style="left:${(64 + dx - 1.7).toFixed(2)}px;bottom:${b}px;height:${h}px"></i>`).join('');
+row4[6].el.append(zStreak);
+const zStreakLines = [...zStreak.children];
+
+const PILLS = [pillQuinoa, pillMilk, pillSoda, pillTuna, pillSpag];
 const ZADDS = [                                                   // the adds in the zoomed framing
-  { pill: pillSoda,   T: T_ZT,  P: P_Z,  R: R_Z,  qty: 1, item: 0 },
+  { pill: pillSpag,   T: T_ZT,  P: P_Z,  R: R_Z,  qty: 1, item: 0 },
   { pill: pillQuinoa, T: T_ZT2, P: P_Z2, R: R_Z2, qty: 1, item: 1, L: L_Z2 },
   { pill: pillTuna,   T: T_ZT3, P: P_Z3, R: R_Z3, qty: 1, item: 2, L: L_Z3 },
   { pill: pillTuna,   T: T_ZT4, P: P_Z4, R: R_Z4, qty: 2, item: 2, L: L_Z4 },
 ];
 const TAPS = [...ZADDS, ...ADDS].sort((a, b) => a.T - b.T);
+const TAPS_ISO = TAPS.map(a => ZADDS.indexOf(a) > 0 ? { ...a, T: 1e9, P: 1e9, R: 1e9 } : a);   // isolated: no further taps
+const tapsNow = () => ISO() ? TAPS_ISO : TAPS;
 let _run = 0;
 const TOTALS = ADDS.map(a => (_run += valueOf(FAB_ITEMS[a.item].price)));   // basket total after each landing
 const touchEl = document.createElement('span'); touchEl.className = 'touch'; camEl.append(touchEl);
@@ -1220,19 +1322,43 @@ function renderCarousel(t, s) {
   promoHead.style.transform = `translateY(${(14 * (1 - ke)).toFixed(3)}px)`;
   const nudge = 6.4 * ke;                                              // neighbours make room as the red one opens
   head4.style.visibility = t >= T_PHONE ? 'visible' : 'hidden';
-  head4.style.transform = `translateY(${(nudge + grow).toFixed(3)}px)`;
+  head4.style.transform = `translateY(${(nudge + grow + worldUp(t, 1)).toFixed(3)}px)`;
   headStatic[0].style.transform = `translateY(${(TXT_RISE * (1 - h2) + ABOVE_SHIFT * ke).toFixed(3)}px)`;
   headStatic[1].style.visibility = t >= T_PHONE ? 'visible' : 'hidden';
   for (const { el } of row3) el.style.visibility = t >= T_PHONE ? 'visible' : 'hidden';
   const sx = swipeX(t), sv = Math.abs(swipeX(t + 1e-3) - sx) / 1e-3;        // row-4 swipe offset and speed
   const ssig = Math.min(2.5, sv * MB_SHUTTER * 0.35);
   for (const { el, col } of row4) {
-    el.style.visibility = t >= T_PHONE ? 'visible' : 'hidden';
-    el.style.transform = `translate(${(col * CAR_PITCH + sx).toFixed(3)}px, ${(ROW4_Y + nudge + grow).toFixed(3)}px)`;
+    const cc = Math.round(col + sx / CAR_PITCH), up = worldUp(t, cc);
+    const vsig = up ? Math.min(6, Math.abs(worldUp(t + 1e-3, cc) - up) / 1e-3 * MB_SHUTTER * 0.35) : 0;   // vertical motion blur
+    el.style.visibility = t >= T_PHONE && up > -760 ? 'visible' : 'hidden';
+    el.style.transform = `translate(${(col * CAR_PITCH + sx).toFixed(3)}px, ${(ROW4_Y + nudge + grow + up).toFixed(3)}px)`;
     if (!el._mb) el._mb = makeBlurFilter();
-    if (ssig > 0.05) { el._mb.g.setAttribute('stdDeviation', `${ssig.toFixed(3)} 0`); el.style.filter = `url(#${el._mb.id})`; }
+    if (ssig > 0.05 || vsig > 0.05) { el._mb.g.setAttribute('stdDeviation', `${ssig.toFixed(3)} ${vsig.toFixed(3)}`); el.style.filter = `url(#${el._mb.id})`; }
     else el.style.filter = 'none';
   }
+  // isolated: the selected item's tile is handed over to its falling thumbnail
+  if (ISO() && t >= I0) {                                        // isolated: the spaghetti's whole card heads for the cart
+    const c = isoAbsorb(t).card, el = ZCARD.el;
+    el.style.transformOrigin = '0 0';
+    el.style.transform = `translate(${c.x.toFixed(3)}px, ${c.y.toFixed(3)}px) rotate(${c.r.toFixed(3)}deg) scale(${c.sx.toFixed(4)}, ${c.sy.toFixed(4)}) translate(-64px, -250px)`;
+    el.style.opacity = c.op.toFixed(4);
+    el.style.filter = 'none';
+    el.style.visibility = c.op > 0.001 ? 'visible' : 'hidden';
+    zStreak.style.visibility = c.streak > 0.01 ? 'inherit' : 'hidden';
+    zStreak.style.opacity = c.streak.toFixed(4);
+    // lines stretch with the speed and flicker a little, each on its own beat
+    /* air streaks: each line is born just above the card, drifts up away from it and fades — streaming at the rate
+       the card falls (driven by the distance fallen, so they speed up as it does), staggered so they never pulse
+       together; they stretch with the speed */
+    zStreakLines.forEach((ln, i) => {
+      const ph = (c.fall * 3.2 + (t - I_A0) * 0.9 + [0.0, 0.55, 0.25, 0.8, 0.4][i]) % 1;
+      const life = Math.sin(Math.PI * ph);                           // fade in and out over its life
+      const len = (0.45 + 0.75 * Math.min(1, c.speed / 3.5)) * (0.8 + 0.4 * life);
+      ln.style.transform = `translateY(${(-24 * ph).toFixed(2)}px) scaleY(${len.toFixed(3)})`;
+      ln.style.opacity = (life * 0.95).toFixed(3);
+    });
+  } else { ZCARD.el.style.opacity = ''; zStreak.style.visibility = 'hidden'; }
   band5.style.visibility = head5.style.visibility = t >= T_PHONE ? 'visible' : 'hidden';
   // going back to the opening look: everything but carousel 4 fades away (the stage turns white)
   const kf = (1 - smooth(seg(t, T_REV, T_REV + D_REV * 0.6))).toFixed(4);
@@ -1494,8 +1620,8 @@ function renderCart(t, nudgeGrow) {
     touch(x0 + drag, fy, down * (1 - lift), lerp(0.85, 1, down) * lerp(1, 1.12, lift));
   } else {
     // one tap at a time: the latest one that has started
-    let ad = TAPS[0];
-    for (const a of TAPS) if (t >= a.T) ad = a;
+    const TP = tapsNow(); let ad = TP[0];
+    for (const a of TP) if (t >= a.T) ad = a;
     const px = ad.pill.card.col * CAR_PITCH + swipeX(t) + 100, py = cardY + 100;  // that card's plus, where it is now
     const a = easeOutCubic(seg(t, ad.T, ad.T + 0.14)) * (1 - easeOutCubic(seg(t, ad.R + 0.06, ad.R + 0.3)));
     const pr = press(t, ad.P, ad.R);
@@ -1504,7 +1630,7 @@ function renderCart(t, nudgeGrow) {
   for (const pl of PILLS) renderPill(pl, t);
 }
 function renderPill(pl, t) {
-  const taps = TAPS.filter(a => a.pill === pl), first = taps[0];
+  const taps = tapsNow().filter(a => a.pill === pl).sort((a, b) => a.T - b.T), first = taps[0];
   pl.el.style.visibility = t >= T_PHONE ? 'visible' : 'hidden';
   const R1p = first.R;
   const kw = spring(t - R1p, COUNTER_SPRING);                         // width, with the storybook's small overshoot
@@ -1709,7 +1835,7 @@ const ZICONS = {
   trolley: { K: CART_W / 81, G: [56.5, 50], ground: 40, body: ZBODY, fold: ZHAND, slots: ZSLOTS, cx: 65, bottom: 70, belly: 48, mouth: [61, 40], shade: true, wheels: true },
   basket:  { K: 112 / 66, G: [33, 28.2], ground: 28.2, body: BBODY, fold: BBODY, slots: slotsOf(BPOLY.slots), cx: 33, bottom: 56.4, belly: 44, mouth: [33, 32], shade: false, rim: BRIM, handles: BHAND },
 };
-let ZICON = new URLSearchParams(location.search).get('icon') === 'basket' ? 'basket' : 'trolley';
+const ZICON = 'trolley';                                         // (basket variant kept in ZICONS, not shown)
 const zsvg = document.createElementNS(SVGNS, 'svg'); zsvg.setAttribute('class', 'zsvg');
 const zfv = v => (v * ZK).toFixed(3);
 zsvg.innerHTML = `<defs><filter id="zcF" x="-40%" y="-40%" width="180%" height="200%" color-interpolation-filters="sRGB">
@@ -1737,9 +1863,10 @@ zsvg.innerHTML = `<defs><filter id="zcF" x="-40%" y="-40%" width="180%" height="
   <path class="zc-rim" fill="#C21035"/>`;
 const zcPlain = zsvg.querySelector('.zc-plain'), zcFx = zsvg.querySelector('.zc-fx'), zcBody = zsvg.querySelector('.zc-body');
 const zcWheels = [...zsvg.querySelectorAll('.zc-w')], zcHands = [...zsvg.querySelectorAll('.zc-h')], zcRim = zsvg.querySelector('.zc-rim');
-const ZQ = PRODUCTS[6], ZCARD = row4[5];                         // Laimon soda
-const ZITEMS = [ZQ, PRODUCTS[11], CANNED[1]];                     // FAB strip, oldest → newest
+const ZQ = PRODUCTS[1], ZCARD = row4[6];                         // Zar spaghetti — the centre card after the swipes
+const ZITEMS = [ZQ, PRODUCTS[11], CANNED[1], PRODUCTS[8]];        // FAB strip, oldest → newest (milk: isolated only)
 let _zr = 0; const ZTOTALS = ZADDS.map(a => (_zr += valueOf(ZITEMS[a.item].price)));   // basket total after each add
+_zr = 0; const I_TOTALS = I_SEQ.map(a => (_zr += valueOf(ZITEMS[a.item].price)));
 const zghost = document.createElement('div'); zghost.className = 'ghost zghost';
 zghost.innerHTML = `<i style="background-image:url('${ZQ.img}')"></i>`;
 zghost.style.width = zghost.style.height = '128px';
@@ -1750,23 +1877,28 @@ zf.innerHTML = `<span class="cf-glass"></span><span class="cf-inset"></span><div
       <div class="cf-price"><p class="cf-label" dir="rtl">جمع سبد</p>
         <div class="cf-value"><svg viewBox="0 0 13 8" fill="none" aria-label="تومان"><path d="${TOMAN_PATH}" fill="black"/></svg><span class="num cf-num"></span></div></div>
       <div class="cf-avatars">${ZITEMS.map(p => `<span class="cf-av"><i style="background-image:url('${p.img}')"></i></span>`).join('')}</div>
-    </div></div>`;
+    </div></div>
+  <div class="zbtn"><svg viewBox="13 15.185 24 23.63" fill="none" aria-hidden="true"><path d="M36.5439 19.9356C36.1008 19.3448 35.4239 18.9879 34.6855 19.0126L18.046 19.1479L17.2829 15.8988C17.1845 15.4804 16.803 15.185 16.3845 15.185H13.923C13.4184 15.185 13 15.5911 13 16.108C13 16.6249 13.4184 17.0311 13.923 17.0311H15.6461L18.7475 30.1384C19.1414 31.8122 20.6428 32.969 22.3289 32.969C22.4397 32.969 22.5505 32.969 22.6612 32.969L31.2025 32.1814C32.8271 32.0337 34.1686 30.926 34.6486 29.3753L36.9008 21.9909C37.11 21.2771 36.987 20.5387 36.5439 19.9479V19.9356ZM24.692 28.1938C24.692 28.1938 24.5689 28.2061 24.5196 28.2061C24.0766 28.2061 23.6951 27.8984 23.6089 27.4554L22.9812 24.1939C22.8951 23.6893 23.2151 23.2093 23.7197 23.1109C24.2243 23.0247 24.7043 23.3447 24.8027 23.8493L25.4304 27.1108C25.5165 27.6031 25.1966 28.0954 24.692 28.1938ZM29.8118 27.1969C29.7256 27.64 29.3441 27.9477 28.9134 27.9477C28.8518 27.9477 28.7903 27.9477 28.7288 27.9354C28.2365 27.8369 27.9042 27.3569 28.0026 26.8523L28.6303 23.5909C28.7164 23.0986 29.2087 22.7663 29.701 22.8647C30.2056 22.9509 30.5379 23.4432 30.4395 23.9355L29.8118 27.1969ZM22.6736 37.3012C22.6736 38.1381 21.9966 38.815 21.1598 38.815C20.3229 38.815 19.646 38.1381 19.646 37.3012C19.646 36.4643 20.3229 35.7874 21.1598 35.7874C21.9966 35.7874 22.6736 36.4643 22.6736 37.3012ZM34.0086 37.3012C34.0086 38.1381 33.3317 38.815 32.4948 38.815C31.6579 38.815 30.981 38.1381 30.981 37.3012C30.981 36.4643 31.6579 35.7874 32.4948 35.7874C33.3317 35.7874 34.0086 36.4643 34.0086 37.3012Z" fill="#FFFFFF" fill-rule="evenodd"/></svg><span>تکمیل خرید</span></div>`;
 const zlabel = document.createElement('div'); zlabel.className = 'zlabel'; zlabel.textContent = 'تکمیل خرید';
 const zghosts2 = ZADDS.slice(1).map(a => { const g = document.createElement('div'); g.className = 'ghost zghost zghost2';
   g.innerHTML = `<i style="background-image:url('${ZITEMS[a.item].img}')"></i>`; g.style.width = g.style.height = '128px'; return g; });
-camEl.append(zf, zghost, zsvg, zlabel, ...zghosts2);
+const zghostsI = I_SEQ.slice(1).map(a => { const g = document.createElement('div'); g.className = 'ghost zghost zghost2';
+  g.innerHTML = `<i style="background-image:url('${ZITEMS[a.item].img}')"></i>`; g.style.width = g.style.height = '128px'; return g; });
+camEl.append(zf, zghost, zsvg, zlabel, ...zghosts2, ...zghostsI);
 const zIn = zf.querySelector('.zf-in'), zSp = zf.querySelector('.zbtn-sp'), zPrice = zf.querySelector('.cf-price');
+const zBtn = zf.querySelector('.zbtn'), zBtnIc = zBtn.querySelector('svg'), zBtnTx = zBtn.querySelector('span');
 const zNum = zf.querySelector('.cf-num'), zDiscs = [...zf.querySelectorAll('.cf-av')], zDisc = zDiscs[0], zStrip = zf.querySelector('.cf-avatars');
 zNum._dir = 1;
 const Z_TOTAL = valueOf(ZQ.price);
 
 /* button geometry + the point correspondence, worked out once (one layout read, on the first frame that needs it) */
 const ZB = {};
-function zButton(name) {
-  if (ZB[name]) return ZB[name];
+function zButton(name, FS) {
+  const key = name + '@' + FS;
+  if (ZB[key]) return ZB[key];
   const BODY = ZICONS[name].body;
   const bw = zSp.offsetWidth || 124, N = BODY.length;
-  const W = bw * FAB_S, H = 52 * FAB_S, r = H / 2, L = W - 2 * r, per = 2 * L + 2 * Math.PI * r;
+  const W = bw * FS, H = 52 * FS, r = H / 2, L = W - 2 * r, per = 2 * L + 2 * Math.PI * r;
   const pill = [];                                    // same winding as the body: along the top edge leftwards first
   for (let i = 0; i < N; i++) {
     let d = per * i / N, x, y;
@@ -1784,171 +1916,124 @@ function zButton(name) {
   const np = pill.map(([x, y]) => [x / (W / 2), y / (H / 2)]);
   let best = 0, bestE = 1e18;
   for (let o = 0; o < N; o++) { let e = 0; for (let i = 0; i < N && e < bestE; i++) { const q = np[(i + o) % N]; e += (nb[i][0] - q[0]) ** 2 + (nb[i][1] - q[1]) ** 2; } if (e < bestE) { bestE = e; best = o; } }
-  return (ZB[name] = { bw, W, H, tgt: BODY.map((_, i) => pill[(i + best) % N]) });
+  return (ZB[key] = { bw, W, H, tgt: BODY.map((_, i) => pill[(i + best) % N]) });
 }
 const zpath = pts => 'M' + pts.map(p => p[0].toFixed(2) + ',' + p[1].toFixed(2)).join('L') + 'Z';
 
+let Z_BW = 0;                                                     // the «تکمیل خرید» button width (read once)
 function renderZ(t, cardY) {
-  const on = t >= T_CP - 0.3;
-  zsvg.style.visibility = on ? 'visible' : 'hidden';
-  zf.style.visibility = zlabel.style.visibility = on && t >= T_GS ? 'visible' : 'hidden';
-  if (!on) { zghost.style.visibility = 'hidden'; return; }
-  const I = ZICONS[ZICON], B = zButton(ZICON), K = I.K;
+  const iso = ISO();
+  zsvg.style.visibility = zlabel.style.visibility = 'hidden';    // (the old polygon morph is retired)
+  const CP = iso ? I_CP : T_CP, IN = iso ? I_IN : T_IN, WD = iso ? I_WD : T_WD, FS = iso ? I_FAB_S : FAB_S;
+  const ADDL = iso ? I_SEQ : ZADDS, TOT = iso ? I_TOTALS : ZTOTALS;
+  const L = ADDL.map(a => a.L || 0);
+  const on = t >= CP - 0.3;                                      // (layers exist a beat early: no first-frame hitch)
+  zf.style.visibility = on ? 'visible' : 'hidden';
+  if (!on) { zghost.style.visibility = 'hidden'; [...zghosts2, ...zghostsI].forEach(g => { g.style.visibility = 'hidden'; }); return; }
+  if (!Z_BW) Z_BW = zSp.offsetWidth || 121;
 
-  /* 1) RECEIVE — two clean beats: the icon swells a little as the item comes in (ready to take it), and gets
-        FAT for a moment as it swallows it (wider, a touch lower, a rounder belly), then eases back */
-  const kc = Math.max(0, spring(t - T_CP, CART_POP));                // pops up from its wheels
-  const swell = t < T_IN ? 0.12 * smooth01(seg(t, T_IN - 0.4, T_IN))
-                         : 0.12 * (1 - spring(t - T_IN, { freq: 1.6, zeta: 0.9 }));      // 1 → 1.12 → 1
-  const fat = Math.max(0, kick(t - T_IN, 13, 0.8, 5.4));             // swallow: one soft bulge (≈ +13 %), no wobble
-  const sq = 0;
-  const rot = -16 * (1 - kc);
-  const th = rot * Math.PI / 180, cs = Math.cos(th), sn = Math.sin(th);
-  const C = [FCX, FCY + 30 * (1 - kc)], piv = I.ground * K, ks = kc * (1 + swell);   // pivot: where it meets the ground
-  const pose = (x, y) => {                                          // viewBox point (already deformed) → cam-local
-    const ux = (x - I.G[0]) * K, uy = (y - I.G[1]) * K - piv;
-    return [C[0] + ks * (ux * cs - uy * sn), C[1] + piv + ks * (ux * sn + uy * cs)];
-  };
-  const deform = (x, y) => {                                        // the basket only (wheels stay as they are)
-    if (fat) {                                                    // (whole outline, so the handle stays attached)
-      const belly = Math.exp(-(((y - I.belly) / 16) ** 2));
-      x = I.cx + (x - I.cx) * (1 + fat * (0.6 + 0.6 * belly));
-      y = I.bottom + (y - I.bottom) * (1 - 0.35 * fat);
+  /* 1) the collapsed FAB: pops up, receives (cumulated: swells as the item comes in, squashes on impact, a soft
+        swallow bulge · isolated: isoAbsorb), then stretches into the CartFab */
+  const kc = Math.max(0, spring(t - CP, CART_POP));
+  let cx, cy, ex, ey;
+  let bulb = 0;
+  if (iso) { const A = isoAbsorb(t).icon; cx = A.x; cy = A.y; ex = A.ex; ey = A.ey; bulb = A.bulb; }
+  else {
+    cx = FCX; cy = FCY + 30 * (1 - kc);
+    const pre = 0.08 * smooth01(seg(t, IN - 0.32, IN)) * (t < IN + 0.3 ? 1 : 0) * (1 - smooth01(seg(t, IN, IN + 0.3)));
+    const sq = kick(t - IN, 18, 0.45, 2.0), gulp = Math.max(0, kick(t - (IN + 0.06), 11, 0.75, 4.2));
+    ex = 0.5 * pre + 0.6 * sq + gulp; ey = pre - sq + gulp;
+  }
+  const kw = t > WD ? spring(t - WD, { freq: 1.45, zeta: 0.8 }) : 0;          // circle → bar
+  const kb = t > WD + 0.03 ? spring(t - WD - 0.03, { freq: 1.6, zeta: 0.8 }) : 0;   // red circle → pill
+  const w = lerp(68, FAB_W, kw), bw = lerp(52, Z_BW, kb);
+  const S = kc * lerp(iso ? I_ICON_S : ICON_S, FS, clamp01(kw));   // shrinks to FAB size AS it stretches: its visual width only ever grows (no balloon-then-shrink)
+  let give = 0; for (let k = 1; k < L.length; k++) give += kick(t - L[k], 20, 0.5, 60);   // the bar dips under each landing
+  zf.style.width = w.toFixed(3) + 'px';
+  // bulb: egg-shaped radii (taller dome on the side the card went in), back to a pill once it settles
+  // radii in px (horizontal = half the height), so the ends stay round at any width — never an ellipse
+  const eggR = r => Math.abs(bulb) > 0.002 && t < WD ? `${r}px / ${(r * (1 + 0.45 * bulb)).toFixed(2)}px ${(r * (1 + 0.45 * bulb)).toFixed(2)}px ${(r * (1 - 0.45 * bulb)).toFixed(2)}px ${(r * (1 - 0.45 * bulb)).toFixed(2)}px` : '';
+  zf.style.borderRadius = eggR(34); zBtn.style.borderRadius = eggR(26);   // the red button bulges with it
+  // while it eats, the frosted glass thins a little so the card shows, blurred, inside the swelling circle
+  zf.style.setProperty('--ga', iso ? (0.8 - 0.3 * Math.max(0, Math.min(1, bulb / 0.34)) * (1 - smooth01(seg(t, IN + 0.3, IN + 0.6)))).toFixed(3) : '0.8');
+  zf.style.transform = `translate(${(cx - w / 2).toFixed(3)}px, ${(cy - 34 + give).toFixed(3)}px) scale(${(S * (1 + ex)).toFixed(4)}, ${(S * (1 + ey) * (1 - give * 0.006)).toFixed(4)})`;
+  zIn.style.top = '1px';
+  zBtn.style.width = bw.toFixed(3) + 'px';
+  const kic = smooth01(seg(t, WD, WD + 0.2)), ktx = smooth01(seg(t, WD + 0.12, WD + 0.42));   // cart glyph → label
+  zBtnIc.style.opacity = (1 - kic).toFixed(4); zBtnIc.style.transform = `scale(${(1 - 0.4 * kic).toFixed(4)})`;
+  zBtnTx.style.opacity = ktx.toFixed(4); zBtnTx.style.transform = `translate(-50%, -50%) scale(${lerp(0.85, 1, ktx).toFixed(4)})`;
+  const kt = smooth01(seg(t, WD + 0.25, WD + 0.6));
+  zPrice.style.opacity = kt.toFixed(4);
+  zPrice.style.transform = `translateX(${(12 * (1 - kt)).toFixed(3)}px)`;
+  // the received item comes out from behind the growing button into its slot at the right end
+  const em = smooth01(clamp01(((w / 2 - 33) - 16 - (-w / 2 + 8 + bw)) / 24 + 0.5));
+  const firstL = ZITEMS.map((_, j) => { if (!j) return 0; const k = ADDL.findIndex(a => a.item === j); return k < 0 ? 1e9 : L[k]; });
+  const open = firstL.map((Lj, j) => j ? smooth01(seg(t, Lj - 0.24, Lj + 0.08)) : 1);
+  zStrip.style.width = (32 + 16 * open.slice(1).reduce((a, b) => a + b, 0)).toFixed(3) + 'px';
+  zDiscs.forEach((dd, j) => {
+    let right = 0; for (let i2 = j + 1; i2 < open.length; i2++) right += 16 * open[i2];
+    dd.style.right = right.toFixed(3) + 'px';
+    if (j === 0) {
+      dd.style.visibility = t >= WD ? 'inherit' : 'hidden';
+      dd.style.transform = `scale(${(lerp(0.55, 1, em) + kick(t - (WD + 0.42), 22, 0.4, 3)).toFixed(4)})`;
+    } else {
+      let pop = 0; ADDL.forEach((a, k) => { if (k && a.item === j) pop += kick(t - L[k], 24, 0.42, a.qty > 1 ? 5.5 : 6.5); });
+      dd.style.visibility = t >= firstL[j] ? 'inherit' : 'hidden';
+      dd.style.transform = `scale(${(1 + pop).toFixed(4)})`;
     }
-    return [x, y];
-  };
-
-  /* 2) BECOME THE FAB — gear up, slots shut, handle folds, body springs onto the button outline */
-  const ka = easeInOutCubic(seg(t, T_MO, T_MO + 0.26));            // handle folds in
-  const kslot = smooth01(seg(t, T_MO - 0.04, T_MO + 0.2));          // slots close
-  const kgear = smooth01(seg(t, T_MO - 0.06, T_MO + 0.2));          // wheels retract
-  const kb = t > T_MO + 0.08 ? spring(t - (T_MO + 0.08), { freq: 1.7, zeta: 0.64 }) : 0;   // outline → button
-  const kg = t > T_GS ? spring(t - T_GS, { freq: 2.6, zeta: 0.62 }) : 0;                     // glass inflates
-  const kw = t > T_WD ? spring(t - T_WD, { freq: 1.45, zeta: 0.8 }) : 0;                     // …and stretches
-  const w = kw > 0 ? lerp(B.bw + 18, FAB_W, kw) : lerp(B.bw, B.bw + 18, kg), h = lerp(52, 68, kg);
-  const pad = Math.min((w - B.bw) / 2, 9);
-  let give = 0; for (const a of ZADDS.slice(1)) give += kick(t - a.L, 20, 0.5, 60);   // the bar dips under each landing
-  const bx = FCX + (-w / 2 + pad + B.bw / 2) * FAB_S, by = FCY + give;   // button centre: rides the bar's left end
-
-  // body outline
-  const pts = I.body.map((p, i) => {
-    let x = p[0], y = p[1];
-    if (ka) { x = lerp(x, I.fold[i][0], ka); y = lerp(y, I.fold[i][1], ka); }
-    const d = deform(x, y), P = pose(d[0], d[1]);
-    if (!kb) return P;
-    const q = B.tgt[i];
-    return [lerp(P[0], bx + q[0], kb), lerp(P[1], by + q[1], kb)];
   });
-  let d = zpath(pts);
-  if (kslot < 1) for (const sl of I.slots) {
-    const sc = 1 - kslot;
-    d += zpath(sl.pts.map(p => { const q = deform(sl.c[0] + (p[0] - sl.c[0]) * sc, sl.c[1] + (p[1] - sl.c[1]) * sc), P = pose(q[0], q[1]);
-      if (!kb) return P; const b = B.tgt[0]; return [lerp(P[0], bx, kb), lerp(P[1], by, kb)]; }));
-  }
-  const fx = 1 - smooth01(seg(t, T_MO + 0.12, T_MO + 0.5));        // the icon's shading gives way to the flat button
-  setAttr(zcBody, 'd', d);
-  zcFx.style.opacity = I.shade ? fx.toFixed(4) : '0';               // (the basket is flat in Figma)
-  zcPlain.style.visibility = fx < 1 || !I.shade ? 'inherit' : 'hidden';
-  if (fx < 1 || !I.shade) setAttr(zcPlain, 'd', d);
-  // basket: dark rim on top, fading into the button colour as the morph starts
-  const kr = I.rim ? 1 - smooth01(seg(t, T_MO - 0.02, T_MO + 0.2)) : 0;
-  zcRim.style.visibility = kr > 0 ? 'inherit' : 'hidden';
-  if (kr > 0) {
-    zcRim.style.opacity = kr.toFixed(4);
-    setAttr(zcRim, 'd', zpath(I.rim.map(p => { const q = deform(p[0], p[1]), P = pose(q[0], q[1]);
-      return kb ? [lerp(P[0], bx, kb), lerp(P[1], by, kb)] : P; })));
-  }
-  /* basket handles: closed at rest; they swing open as the item comes in (making room), clap shut on it as it is
-     swallowed (one soft overshoot), and fold down flat into the rim as the basket becomes the button */
-  const H = I.handles;
-  const hOpen = t < T_IN ? smooth01(seg(t, T_IN - 0.38, T_IN - 0.08)) : 1 - spring(t - T_IN, { freq: 2.6, zeta: 0.5 });
-  zcHands.forEach((el, j) => {
-    const hl = H ? (1 - ka) * kc : 0;
-    if (hl <= 0.001) { el.style.visibility = 'hidden'; return; }
-    el.style.visibility = 'inherit';
-    const sgn = j ? -1 : 1;                                       // right handle: mirrored about the centre line
-    const a = lerp(lerp(H.closed, H.open, hOpen), -0.25, ka);    // …folding toward the rim
-    const bxv = j ? 2 * I.cx - H.base[0] : H.base[0];
-    const tip = [bxv + sgn * Math.cos(a) * H.len * (1 - ka), H.base[1] + Math.sin(a) * H.len * (1 - ka)];
-    let P0 = pose(...deform(bxv, H.base[1])), P1 = pose(...deform(tip[0], tip[1]));
-    if (kb) { P0 = [lerp(P0[0], bx, kb), lerp(P0[1], by, kb)]; P1 = [lerp(P1[0], bx, kb), lerp(P1[1], by, kb)]; }
-    setAttr(el, 'x1', P0[0].toFixed(2)); setAttr(el, 'y1', P0[1].toFixed(2));
-    setAttr(el, 'x2', P1[0].toFixed(2)); setAttr(el, 'y2', P1[1].toFixed(2));
-    setAttr(el, 'stroke-width', (H.wid * K * ks * (1 - 0.5 * ka)).toFixed(3));
-  });
-  ZWHEELS.forEach((c, j) => {
-    const el = zcWheels[j], g = I.wheels ? 1 - kgear : 0;
-    if (g <= 0) { el.style.visibility = 'hidden'; return; }
-    el.style.visibility = 'inherit';
-    const wsq = 0.5 * fat;
-    const cy0 = lerp(c[1], 70, kgear * kgear);                    // pulled up into the basket
-    const P = pose(c[0], cy0 + ZWR * wsq);
-    setAttr(el, 'cx', P[0].toFixed(2)); setAttr(el, 'cy', P[1].toFixed(2));
-    setAttr(el, 'rx', (ZWR * K * ks * g * (1 + 0.4 * wsq)).toFixed(3)); setAttr(el, 'ry', (ZWR * K * ks * g * (1 - wsq)).toFixed(3));
-  });
+  const num = v => placesOf(fa(v.toLocaleString('en-US')));
+  let ti = 0; L.forEach((Lk, i2) => { if (i2 && t >= Lk) ti = i2; });
+  if (ti === 0) odometer(zNum, FONT_CF, 24, num(0), num(TOT[0]), seg(t, WD + 0.42, WD + 0.82), 0.4);
+  else odometer(zNum, FONT_CF, 24, num(TOT[ti - 1]), num(TOT[ti]), seg(t, L[ti], L[ti] + 0.4), 0.4);
 
-  // glass bar: inflates out of the button, then stretches; the content stays right-anchored
-  if (t >= T_GS) {
-    zf.style.width = w.toFixed(3) + 'px'; zf.style.height = h.toFixed(3) + 'px';
-    zf.style.transform = `translate(${(FCX - w / 2).toFixed(3)}px, ${(FCY - h / 2 + give).toFixed(3)}px) scale(${FAB_S}, ${(FAB_S * (1 - give * 0.006)).toFixed(4)})`;
-    zf.style.opacity = clamp01(kg * 2.5).toFixed(4);
-    zIn.style.top = ((h - 66) / 2).toFixed(3) + 'px';
-    const kt = smooth01(seg(t, T_WD + 0.25, T_WD + 0.6));
-    zPrice.style.opacity = kt.toFixed(4);
-    zPrice.style.transform = `translateX(${(12 * (1 - kt)).toFixed(3)}px)`;
-    // the swallowed item comes back out from behind the button and rides into its slot at the right end
-    const dxs = (w / 2 - 33) * FAB_S - (bx - FCX) - B.W / 2;        // disc centre past the button's right edge (pt)
-    const em = smooth01(clamp01(dxs / (24 * FAB_S) + 0.5));
-    // the strip: each new thumbnail's slot opens just before it lands (older ones slide left by 16), newest on top
-    const firstL = ZITEMS.map((_, j) => j ? ZADDS.find(a => a.item === j).L : 0);   // first landing of each thumbnail
-    const open = firstL.map((L, j) => j ? smooth01(seg(t, L - 0.24, L + 0.08)) : 1);
-    zStrip.style.width = (32 + 16 * (open[1] + open[2])).toFixed(3) + 'px';   // (a repeat add lands on its own disc: no new slot)
-    zDiscs.forEach((dd, j) => {
-      let right = 0; for (let i2 = j + 1; i2 < open.length; i2++) right += 16 * open[i2];
-      dd.style.right = right.toFixed(3) + 'px';
-      if (j === 0) {
-        dd.style.visibility = 'inherit';
-        dd.style.transform = `scale(${(lerp(0.55, 1, em) + kick(t - (T_WD + 0.42), 22, 0.4, 3)).toFixed(4)})`;
-      } else {
-        let pop = 0; for (const a of ZADDS.slice(1)) if (a.item === j) pop += kick(t - a.L, 24, 0.42, a.qty > 1 ? 5.5 : 6.5);
-        dd.style.visibility = t >= firstL[j] ? 'inherit' : 'hidden';
-        dd.style.transform = `scale(${(1 + pop).toFixed(4)})`;
-      }
-    });
-    // total: ۰ → first item as the bar opens, then +each landing
-    const num = v => placesOf(fa(v.toLocaleString('en-US')));
-    let ti = 0; ZADDS.forEach((a, i2) => { if (i2 && t >= a.L) ti = i2; });
-    if (ti === 0) odometer(zNum, FONT_CF, 24, num(0), num(ZTOTALS[0]), seg(t, T_WD + 0.42, T_WD + 0.82), 0.4);
-    else odometer(zNum, FONT_CF, 24, num(ZTOTALS[ti - 1]), num(ZTOTALS[ti]), seg(t, ZADDS[ti].L, ZADDS[ti].L + 0.4), 0.4);
-    const kl = smooth01(seg(t, T_GS + 0.02, T_GS + 0.32));
-    zlabel.style.opacity = kl.toFixed(4);
-    zlabel.style.transform = `translate(${bx.toFixed(3)}px, ${by.toFixed(3)}px) scale(${(FAB_S * lerp(0.82, 1, kl)).toFixed(4)}) translate(-50%, -50%)`;
-  }
-
-  /* 3) the items: tossed up off the tile, hang, then fall — the first into the basket (behind the cart, still
-        nearly mouth-wide), the next ones straight into the FAB's newest slot — landing at full speed */
+  /* 2) cumulated: the thumbnail is thrown into the circle (and goes in behind its frosted glass); later items are
+        thrown into the strip's newest slot */
   const cardThumb = card => ({ x: card.col * CAR_PITCH + swipeX(t) + 64, y: cardY + 64 });
   {
-    const lt = t - T_GL, gon = lt >= 0 && t < T_IN + 0.04;
-    zghost.style.visibility = gon || t < T_CP - 0.25 ? 'visible' : 'hidden';   // (pre-warmed invisibly)
+    const lt = t - T_GL, gon = !iso && lt >= 0 && t < IN + 0.04;
+    zghost.style.visibility = gon || t < CP - 0.25 ? 'visible' : 'hidden';   // (pre-warmed invisibly)
     if (gon) {
-      zghost.style.opacity = (1 - smooth01(seg(t, T_IN - 0.08, T_IN))).toFixed(4);
-      const m = deform(I.mouth[0], I.mouth[1]), E0 = pose(m[0], m[1]);   // into the basket, wherever it is
-      zFly(zghost, cardThumb(ZCARD), { x: E0[0], y: E0[1] }, lt, GFLY, 58, 0.2, 0.8, -12);
+      zghost.style.opacity = (1 - smooth01(seg(t, IN - 0.06, IN + 0.02))).toFixed(4);
+      zFly(zghost, cardThumb(ZCARD), { x: cx, y: cy }, lt, GFLY, 40, 0.2, 0.8, -12);
     } else if (t < T_GL) zghost.style.opacity = '0.01';
   }
   zghosts2.forEach((g, j) => {
-    const a = ZADDS[j + 1], lt = t - a.R, gon = lt >= 0 && t < a.L;
+    const a = ZADDS[j + 1], lt = t - a.R, gon = !iso && lt >= 0 && t < a.L;
     g.style.visibility = gon ? 'visible' : 'hidden';
     if (!gon) return;
-    const E = { x: FCX + (w / 2 - 33) * FAB_S, y: FCY + give };   // the strip's newest slot (rightmost)
-    zFly(g, cardThumb(a.pill.card), E, lt, ZFLY, 32 * FAB_S, 0.22, 0.78, 10);
+    zFly(g, cardThumb(a.pill.card), { x: cx + (w / 2 - 33) * S, y: cy + give }, lt, ZFLY, 32 * S, 0.22, 0.78, 10);
   });
+  // isolated: the next items fall in from above the frame into the newest slot (same gravity, same ghost)
+  zghostsI.forEach((g, j) => {
+    const a = I_SEQ[j + 1], lt = t - (a.L - I_FLY), gon = iso && lt >= 0 && t < a.L;
+    g.style.visibility = gon ? 'visible' : 'hidden';
+    if (!gon) return;
+    zFly(g, { x: I_ICX + a.from[0], y: I_FAB_Y + a.from[1] }, { x: cx + (w / 2 - 33) * S, y: cy + give }, lt, I_FLY, 32 * S, 0.3, 0.7, a.from[0] > 0 ? -10 : 10);
+  });
+}
+/* isolated: the freed thumbnail sinks slowly (eased in and out — it floats while the world rushes past), shrinking
+   to the cart's mouth and rounding off, with a gentle sway; the cart's pounce snaps up the last stretch */
+function zFall(g, S, E, u) {
+  const k = smooth01(u), kp = lerp(u, easeInOutSine(u), 0.45);   // path: nearly steady, slow sink — it never arrives early
+  const x = lerp(S.x, E.x, kp), y = lerp(S.y, E.y, kp);
+  const size = lerp(128, 60, smooth01((u - 0.08) / 0.92)), gs = size / 128;
+  const lift = Math.sin(Math.PI * Math.min(1, u * 1.2));
+  const sway = Math.sin(u * Math.PI * 1.5), rx = 9 * Math.sin(Math.PI * u), spin = 5 * sway * (1 - u);
+  const lp = 1 + 0.06 * Math.sin(Math.min(1, u / 0.15) * Math.PI);  // freed: lifts off a touch first
+  const e = g.style;
+  e.borderRadius = (lerp(24, size / 2, k) / gs).toFixed(2) + 'px';
+  e.borderWidth = (lerp(1, 2, k) / gs).toFixed(2) + 'px';
+  e.borderColor = k > 0.5 ? '#FFFFFF' : '#EFEEEB';
+  e.boxShadow = `0 ${((2 + 14 * lift) / gs).toFixed(1)}px ${((4 + 28 * lift) / gs).toFixed(1)}px rgba(0,0,0,${(0.08 + 0.1 * lift).toFixed(3)})`;
+  g.firstChild.style.inset = (lerp(11, 0, k) / gs).toFixed(2) + 'px';
+  g.firstChild.style.borderRadius = (lerp(4, size / 2, k) / gs).toFixed(2) + 'px';
+  e.transform = `translate3d(${(x - 64).toFixed(2)}px, ${(y - 64).toFixed(2)}px, 0) perspective(700px) rotateX(${rx.toFixed(2)}deg) `
+    + `rotate(${spin.toFixed(2)}deg) scale(${(gs * lp).toFixed(4)})`;
 }
 /* one thumbnail in flight (cam-local pt) — a true projectile: ONE gravity for every item (Z_G), constant horizontal
    speed, and the launch speed solved so it lands on the target exactly at the end of its flight time; so it rises,
-   slows to a hang at the apex and falls faster and faster, landing at its fastest. It lifts, tilts back, banks and
-   stretches with its fall, turning from a card into a disc. */
+   slows to a hang at the apex and falls faster and faster, landing at its fastest. */
 const Z_G = 2600;                                                // pt/s² in camera-local units (≈ 5.7 k px/s² on stage)
 function zFly(g, S, E, lt, fly, endSize, k0, k1, spinA) {
   lt = Math.min(lt, fly);
@@ -1979,7 +2064,7 @@ const reveal = document.getElementById('reveal');
 const plusBtn = document.getElementById('plusBtn');
 
 Timeline.add({
-  id: 'shot1', start: 0, dur: D_END,
+  id: 'shot1', start: 0, dur: D_END_ISO,
   render(t) {
     // 1) Plus entrance: its own spring (Apple-style, one soft ~4 % overshoot), scaled about its own centre.
     //    The camera already holds the card at hero scale, so the blurred card is there from the first frame.
@@ -2017,10 +2102,25 @@ Timeline.add({
       const kr = easeInOutCubic(seg(t, T_REV, T_REV + D_REV));
       s = Math.exp(lerp(Math.log(S_FINAL), Math.log(S_CARD), kr));
       let fx2 = lerp(f1.x, f2.x, kr), fy2 = lerp(f1.y, f2.y, kr);
-      if (t > T_ZO) {                                           // …then eases out a little as the item is added
+      if (t > T_ZO && !ISO()) {                                 // …then eases out a little as the item is added
         const kz2 = ZO_EASE(seg(t, T_ZO, T_ZO + D_ZO));
         s = Math.exp(lerp(Math.log(S_CARD), Math.log(S_ZO), kz2));
         fx2 = lerp(f2.x, F_ZO[0], kz2); fy2 = lerp(f2.y, F_ZO[1], kz2);
+      } else if (t > T_ZO) {
+        /* isolated: only a slight ease-out, keeping both big; the camera lags behind the fall (so the card visibly
+           drops at first) and arrives with the pair framed in the middle of the frame as they meet, pushes in a
+           touch as the circle eats the card, then settles on the circle for the FAB */
+        const kA = cubicBezier(0.3, 0, 0.2, 1)(seg(t, T_ZO, T_ZO + 0.8));      // ease out to the pair's scale (whole card in frame)
+        const kY = easeInOutCubic(seg(t, I_A0 + 0.2, I_IN + 0.1));             // follow the fall down, lagging behind it
+        const kp = easeInOutCubic(seg(t, I_IN - 0.15, I_IN + 0.4));
+        const kF = easeInOutCubic(seg(t, I_IN + 0.05, I_IN + 0.95));
+        s = Math.exp(lerp(Math.log(S_CARD), Math.log(I_S_FALL), kA) + kp * (Math.log(I_S_END) - Math.log(I_S_FALL)));
+        fx2 = lerp(f2.x, I_FOCUS[0], kA); fy2 = lerp(f2.y, I_FOCUS[1], kY);
+        if (t < I_IN) {                                          // keep air above the falling card for its streaks (less as they meet)
+          const C = isoAbsorb(t).card, air = lerp(95, 36, smooth01(seg(t, I_A0 + 0.95, I_IN)));
+          fy2 = Math.min(fy2, C.y - 250 * C.sy - air + 540 / s);
+        }
+        fy2 = lerp(fy2, I_FAB_Y, kF);
       }
       tx = -(fx2 - 100) * s; ty = -(fy2 - 100) * s;
     }
@@ -2055,23 +2155,29 @@ Promise.all([document.fonts.ready, ...[...document.images].map(i => i.decode().c
 });
 
 /* ---- Preview timeline: play/pause, restart, scrub, chapter marks, keyboard ---- */
-const CHAPTERS = [
+const chaptersFor = () => [
   [0, 'Plus'], [T_PULL, 'Card'], [T_CAR, 'Carousel'], [T_ZOOM, 'Two rows'], [T_PHONE, 'Phone'],
   [T_SCROLL, 'Scroll'], [T_MORPH, 'Promo'], [T_TIMER, 'Countdown'], [T_GREEN, 'World Cup'], [T_NIVEA, 'NIVEA'],
-  [T_S4, 'Best sellers'], [T_SW, 'Swipe · back to full screen'], [SW3_T, 'Swipe · add to cart'], [T_MO, 'Cart → FAB'], [T_ZT2, 'More items'], [T_TAP1, 'Add to cart'], [SW2_T, 'Swipe 2'],
+  [T_S4, 'Best sellers'], [T_SW, 'Swipe · back to full screen'], [SW3_T, 'Swipe · add to cart'],
+  ...(ISO() ? [[I0, 'Isolate · fall'], [I_MO, 'Cart → FAB'], [I_SEQ[1].L - I_FLY, 'More items']]
+            : [[T_MO, 'Cart → FAB'], [T_ZT2, 'More items']]),
 ].filter(c => c[0] < Timeline.duration);
+let CHAPTERS = chaptersFor();
 const sbPlay = document.getElementById('sbPlay'), sbTrack = document.getElementById('sbTrack');
 const sbFill = document.getElementById('sbFill'), sbHead = document.getElementById('sbHead'), sbTip = document.getElementById('sbTip');
-const sbNow = document.getElementById('sbNow'), sbChap = document.getElementById('sbChap');
-const DUR = Timeline.duration;
-document.getElementById('sbDur').textContent = `/ ${DUR.toFixed(1)}s`;
+const sbNow = document.getElementById('sbNow');
+let DUR = Timeline.duration;
 const chapterAt = t => { let c = CHAPTERS[0][1]; for (const [s, n] of CHAPTERS) if (t >= s - 1e-6) c = n; return c; };
-document.getElementById('sbMarks').innerHTML = CHAPTERS.slice(1).map(([s, n]) => `<i style="left:${(s / DUR * 100).toFixed(3)}%" title="${n}"></i>`).join('');
+function buildMarks() {
+  DUR = Timeline.duration; CHAPTERS = chaptersFor();
+  document.getElementById('sbDur').textContent = `/ ${DUR.toFixed(1)}s`;
+  document.getElementById('sbMarks').innerHTML = CHAPTERS.slice(1).map(([s, n]) => `<i style="left:${(s / DUR * 100).toFixed(3)}%" title="${n}"></i>`).join('');
+}
+buildMarks();
 Timeline.listeners.push(t => {
   const pct = (t / DUR * 100).toFixed(3) + '%';
   sbFill.style.width = pct; sbHead.style.left = pct;
   sbNow.textContent = t.toFixed(1);
-  sbChap.textContent = chapterAt(t);
   sbPlay.classList.toggle('on', Timeline.playing);
   sbTrack.setAttribute('aria-valuenow', t.toFixed(1));
 });
@@ -2096,16 +2202,6 @@ sbTrack.addEventListener('pointerdown', e => {
   sbTrack.addEventListener('pointermove', move); sbTrack.addEventListener('pointerup', up); sbTrack.addEventListener('pointercancel', up);
 });
 sbPlay.addEventListener('click', e => { e.currentTarget.blur(); Timeline.toggle(); });
-// cart icon: trolley (Figma 415:5816) or basket (415:5829) — also ?icon=basket for capture
-const sbIcon = document.getElementById('sbIcon');
-const syncIcon = () => sbIcon.querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', String(b.dataset.icon === ZICON)));
-sbIcon.addEventListener('click', e => {
-  const b = e.target.closest('button'); if (!b) return; b.blur();
-  ZICON = b.dataset.icon; syncIcon();
-  const u = new URL(location.href); u.searchParams.set('icon', ZICON); history.replaceState(null, '', u);
-  Timeline.seek(Timeline.t);                                   // re-render the current frame with the other icon
-});
-syncIcon();
 document.getElementById('sbRestart').addEventListener('click', e => { e.currentTarget.blur(); Timeline.play(0); });
 // Space: play/pause · R / Home: restart · ←/→: one frame (⇧: 1 s) · [ / ]: previous / next chapter · End: last frame
 addEventListener('keydown', e => {
